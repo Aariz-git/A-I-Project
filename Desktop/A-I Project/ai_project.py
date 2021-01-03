@@ -1,4 +1,4 @@
-import math, re, string, requests, json, tkinter as tk
+import math, re, string, tkinter as tk
 from itertools import product
 from inspect import getsourcefile
 
@@ -6,11 +6,11 @@ from os.path import abspath, join, dirname
 
 ##Constants##
 
-# (empirically derived mean sentiment intensity rating increase for booster words)
+# (mean sentiment intensity rating increase for booster words)
 B_INCR = 0.293
 B_DECR = -0.293
 
-# (empirically derived mean sentiment intensity rating increase for using
+# (mean sentiment intensity rating increase for using
 # ALLCAPs to emphasize a word)
 C_INCR = 0.733
 
@@ -31,8 +31,6 @@ NEGATE = \
      "oughtn't", "shan't", "shouldn't", "uh-uh", "wasn't", "weren't",
      "without", "wont", "wouldnt", "won't", "wouldn't", "rarely", "seldom", "despite"]
 
-# booster/dampener 'intensifiers' or 'degree adverbs'
-# http://en.wiktionary.org/wiki/Category:English_degree_adverbs
 
 BOOSTER_DICT = \
     {"absolutely": B_INCR, "amazingly": B_INCR, "awfully": B_INCR, "completely": B_INCR, "considerably": B_INCR,
@@ -53,7 +51,7 @@ BOOSTER_DICT = \
      "scarcely": B_DECR, "slightly": B_DECR, "somewhat": B_DECR,
      "sort of": B_DECR, "sorta": B_DECR, "sortof": B_DECR, "sort-of": B_DECR}
 
-# check for special case idioms using a sentiment-laden keyword known to VADER
+# check for special case idioms using a sentiment-laden keyword known to VADER txt
 SPECIAL_CASE_IDIOMS = {"the shit": 3, "the bomb": 3, "bad ass": 1.5, "yeah right": -2,
                        "cut the mustard": 2, "kiss of death": -1.5, "hand to mouth": -2}
 
@@ -122,7 +120,7 @@ def scalar_inc_dec(word, valence, is_cap_diff):
         scalar = BOOSTER_DICT[word_lower]
         if valence < 0:
             scalar *= -1
-        # check if booster/dampener word is in ALLCAPS (while others aren't)
+        # check if booster word is in ALLCAPS (while others aren't)
         if word.isupper() and is_cap_diff:
             if valence > 0:
                 scalar += C_INCR
@@ -247,8 +245,7 @@ class SentimentIntensityAnalyzer(object):
 
             for start_i in range(0, 3):
                 if i > start_i and words_and_emoticons[i - (start_i + 1)].lower() not in self.lexicon:
-                    # dampen the scalar modifier of preceding words and emoticons
-                    # (excluding the ones that immediately preceed the item) based
+                    # the scalar modifier of preceding words and emoticons
                     # on their distance from the current item.
                     s = scalar_inc_dec(words_and_emoticons[i - (start_i + 1)], valence, is_cap_diff)
                     if start_i == 1 and s != 0:
@@ -284,7 +281,7 @@ class SentimentIntensityAnalyzer(object):
         return valence
 
     def _but_check(self, words_and_emoticons, sentiments):
-        # check for modification in sentiment due to contrastive conjunction 'but'
+        # check for sentiment due to conjunction 'but'
         if 'but' in words_and_emoticons or 'BUT' in words_and_emoticons:
             try:
                 bi = words_and_emoticons.index('but')
@@ -330,7 +327,7 @@ class SentimentIntensityAnalyzer(object):
             if zeroonetwo in SPECIAL_CASE_IDIOMS:
                 valence = SPECIAL_CASE_IDIOMS[zeroonetwo]
 
-        # check for booster/dampener bi-grams such as 'sort of' or 'kind of'
+        # check for booster such as 'sort of' or 'kind of'
         if threetwo in BOOSTER_DICT or twoone in BOOSTER_DICT:
             valence = valence + B_DECR
         return valence
@@ -373,12 +370,12 @@ class SentimentIntensityAnalyzer(object):
         return ep_amplifier
 
     def _amplify_qm(self, text):
-        # check for added emphasis resulting from question marks (2 or 3+)
+        # check resulting from question marks (2 or 3+)
         qm_count = text.count("?")
         qm_amplifier = 0
         if qm_count > 1:
             if qm_count <= 3:
-                # (empirically derived mean sentiment intensity rating increase for
+                # ( mean sentiment intensity rating increase for
                 # question marks)
                 qm_amplifier = qm_count * 0.18
             else:
@@ -438,7 +435,6 @@ class SentimentIntensityAnalyzer(object):
         return sentiment_dict
 """
 //////////////////////////////////////// UI CODE STARTS HERE ////////////////////////////////////
-
 """
 
 
@@ -457,7 +453,7 @@ class UIofProject(tk.Frame):
         bottomFrame = tk.Frame(self, width=400, height=200)
         bottomFrame.pack(side='bottom')
 
-        self.responseConsole = tk.Text(topFrame, fg='green', bg="black", width=70, height=20)
+        self.responseConsole = tk.Text(topFrame, fg='green', bg="white", width=70, height=20)
         demoButton = tk.Button(topFrame, text="Play Example", command=self.sentimentDemo, height=2, width=10, bg="green")
         nltkButton = tk.Button(topFrame, text="Tokenize a \nSentence \nExample", command=self.nltk, height=3, width=10, bg="green")
 
@@ -577,7 +573,6 @@ class UIofProject(tk.Frame):
 
 """
 //////////////////////////////////////// UI CODE ENDS HERE ////////////////////////////////////
-
 """
 root = tk.Tk()
 
@@ -585,5 +580,3 @@ root.geometry("700x400")
 
 ui = UIofProject(master=root)
 ui.mainloop()
-
-
